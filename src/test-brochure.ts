@@ -44,7 +44,7 @@ async function main() {
   console.log('Generating cruise brochure PDF...');
   try {
     const base64 = await generateCruiseBrochurePDF(mockCruise);
-    const outPath = path.join(__dirname, '..', 'test-output-cruise2.pdf');
+    const outPath = path.join(__dirname, '..', 'test-output-cruise3.pdf');
     fs.writeFileSync(outPath, Buffer.from(base64, 'base64'));
     console.log(`✅ PDF written: ${outPath}`);
     console.log(`   Size: ${(Buffer.from(base64, 'base64').length / 1024).toFixed(1)} KB`);

@@ -224,29 +224,26 @@ export async function generateCruiseBrochurePDF(cruise: CruiseProduct): Promise<
          .text(`Capacity: ${cruise.capacity} passengers`, M, 158, { width: CW, align: 'center' });
     }
 
-    // ── SHORT DESCRIPTION (before image) ─────────────────────────────────────
-    doc.y = 183;
+    // ── SHORT DESCRIPTION ────────────────────────────────────────────────────
+    doc.y = 185;
     if (cruise.shortDescription) {
       const desc = stripHtml(cruise.shortDescription);
       if (desc) {
         safeText(doc, desc, M, { width: CW, align: 'justify', fontSize: 9.5, fontName: 'Sans-Italic', fillColor: DARK });
-        doc.moveDown(0.4);
+        doc.moveDown(0.5);
       }
     }
 
-    // ── SHIP IMAGE ────────────────────────────────────────────────────────────
-    const IMG_H = 160;
-    const imageStartY = doc.y;
+    // ── SHIP IMAGE — framed within text margins ───────────────────────────────
+    const IMG_H = 150;
+    const imgY = doc.y + 4;
     if (imageBuf) {
       try {
-        doc.image(imageBuf, 0, imageStartY, { width: PW, height: IMG_H, cover: [PW, IMG_H] });
-        doc.y = imageStartY + IMG_H + 10;
-      } catch {
-        doc.y = imageStartY + 10;
-      }
-    } else {
-      doc.y = imageStartY + 10;
+        doc.image(imageBuf, M, imgY, { width: CW, height: IMG_H, cover: [CW, IMG_H] });
+        doc.rect(M, imgY, CW, IMG_H).strokeColor(GOLD).lineWidth(0.8).stroke();
+      } catch { /* continue without image */ }
     }
+    doc.y = imgY + IMG_H + 14;
 
     doc.moveTo(M, doc.y).lineTo(PW - M, doc.y)
        .strokeColor(GOLD).lineWidth(0.5).stroke();
