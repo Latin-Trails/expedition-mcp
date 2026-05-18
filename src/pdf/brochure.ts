@@ -224,28 +224,28 @@ export async function generateCruiseBrochurePDF(cruise: CruiseProduct): Promise<
          .text(`Capacity: ${cruise.capacity} passengers`, M, 158, { width: CW, align: 'center' });
     }
 
-    // ── SHIP IMAGE ────────────────────────────────────────────────────────────
-    const IMG_H = 200;
-    if (imageBuf) {
-      try {
-        doc.image(imageBuf, 0, 179, { width: PW, height: IMG_H, cover: [PW, IMG_H] });
-        // Dark overlay for readability
-        doc.rect(0, 179, PW, IMG_H).fillOpacity(0.15).fill(DARK).fillOpacity(1);
-        doc.y = 179 + IMG_H + 14;
-      } catch {
-        doc.y = 192;
-      }
-    } else {
-      doc.y = 192;
-    }
-
-    // ── SHORT DESCRIPTION ─────────────────────────────────────────────────────
+    // ── SHORT DESCRIPTION (before image) ─────────────────────────────────────
+    doc.y = 183;
     if (cruise.shortDescription) {
       const desc = stripHtml(cruise.shortDescription);
       if (desc) {
-        safeText(doc, desc, M, { width: CW, align: 'justify', fontSize: 10, fontName: 'Sans-Italic', fillColor: DARK });
-        doc.moveDown(0.7);
+        safeText(doc, desc, M, { width: CW, align: 'justify', fontSize: 9.5, fontName: 'Sans-Italic', fillColor: DARK });
+        doc.moveDown(0.4);
       }
+    }
+
+    // ── SHIP IMAGE ────────────────────────────────────────────────────────────
+    const IMG_H = 160;
+    const imageStartY = doc.y;
+    if (imageBuf) {
+      try {
+        doc.image(imageBuf, 0, imageStartY, { width: PW, height: IMG_H, cover: [PW, IMG_H] });
+        doc.y = imageStartY + IMG_H + 10;
+      } catch {
+        doc.y = imageStartY + 10;
+      }
+    } else {
+      doc.y = imageStartY + 10;
     }
 
     doc.moveTo(M, doc.y).lineTo(PW - M, doc.y)
