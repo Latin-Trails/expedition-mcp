@@ -48,6 +48,26 @@ const FOOTER_H = 58;
 const FOOTER_Y = PH - FOOTER_H;
 const SAFE_Y   = FOOTER_Y - 8;
 
+// ─── Slug formatting ──────────────────────────────────────────────────────────
+
+function formatSlug(s: unknown): string {
+  if (!s || typeof s !== 'string') return '';
+  return s.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// ─── Normalize spec/include items that may come as objects from REST API ──────
+
+function extractText(item: unknown): string {
+  if (!item) return '';
+  if (typeof item === 'string') return item;
+  if (typeof item === 'object') {
+    const o = item as Record<string, unknown>;
+    const val = o.specification ?? o.include ?? o.notInclude ?? o.text ?? o.value ?? o.name ?? o.label;
+    if (val != null) return String(val);
+  }
+  return String(item);
+}
+
 // ─── HTML stripping ───────────────────────────────────────────────────────────
 
 function stripHtml(raw: unknown): string {
@@ -141,7 +161,7 @@ function stampFooter(doc: PDFKit.PDFDocument) {
   doc.rect(0, FOOTER_Y, PW, FOOTER_H).fill(DARK);
   doc.rect(0, FOOTER_Y, PW, 3).fill(GOLD);
   doc.fill(WHITE).fontSize(9).font('Sans')
-     .text('voyagers.travel  ·  info@voyagers.travel', M, FOOTER_Y + 14, {
+     .text('voyagers.travel  ·  reservations1@voyagers.travel', M, FOOTER_Y + 14, {
        align: 'center', width: CW,
      });
   doc.fill(MUTED).fontSize(7.5).font('Sans')
@@ -191,8 +211,11 @@ export async function generateCruiseBrochurePDF(cruise: CruiseProduct): Promise<
     doc.fill(DARK).fontSize(titleFontSize).font('Serif-Bold')
        .text(cruise.name, M, 104, { width: CW, align: 'center' });
 
-    const subtitle = [cruise.type, cruise.category, cruise.origin ? cruise.origin.charAt(0).toUpperCase() + cruise.origin.slice(1) : '']
-      .filter(Boolean).join('  ·  ');
+    const subtitle = [
+      cruise.type ? formatSlug(cruise.type) : '',
+      cruise.category ? formatSlug(cruise.category) : '',
+      cruise.origin ? cruise.origin.charAt(0).toUpperCase() + cruise.origin.slice(1) : '',
+    ].filter(Boolean).join('  ·  ');
     doc.fill(GOLD).fontSize(11).font('Sans')
        .text(subtitle, M, 138, { width: CW, align: 'center' });
 
@@ -249,11 +272,11 @@ export async function generateCruiseBrochurePDF(cruise: CruiseProduct): Promise<
       const startY = doc.y;
 
       doc.fill(DARK).fontSize(9).font('Sans');
-      leftItems.forEach(s => { doc.text(`- ${stripHtml(s)}`, M, doc.y, { width: colW }); });
+      leftItems.forEach(s => { doc.text(`- ${stripHtml(extractText(s))}`, M, doc.y, { width: colW }); });
       const afterLeft = doc.y;
 
       doc.y = startY;
-      rightItems.forEach(s => { doc.text(`- ${stripHtml(s)}`, M + colW + 16, doc.y, { width: colW }); });
+      rightItems.forEach(s => { doc.text(`- ${stripHtml(extractText(s))}`, M + colW + 16, doc.y, { width: colW }); });
 
       doc.y = Math.max(afterLeft, doc.y);
       doc.moveDown(0.8);
@@ -305,14 +328,14 @@ export async function generateCruiseBrochurePDF(cruise: CruiseProduct): Promise<
       doc.fill(DARK).fontSize(9).font('Sans');
 
       doc.y = itemsY;
-      incItems.forEach((item: string) => {
-        doc.text(`+ ${stripHtml(item)}`, M, doc.y, { width: colW });
+      incItems.forEach((item: unknown) => {
+        doc.text(`+ ${stripHtml(extractText(item))}`, M, doc.y, { width: colW });
       });
       const afterLeft = doc.y;
 
       doc.y = itemsY;
-      notItems.forEach((item: string) => {
-        doc.text(`x ${stripHtml(item)}`, M + colW + 12, doc.y, { width: colW });
+      notItems.forEach((item: unknown) => {
+        doc.text(`x ${stripHtml(extractText(item))}`, M + colW + 12, doc.y, { width: colW });
       });
 
       doc.y = Math.max(afterLeft, doc.y);
